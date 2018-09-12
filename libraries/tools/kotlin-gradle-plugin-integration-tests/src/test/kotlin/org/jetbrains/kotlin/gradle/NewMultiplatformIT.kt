@@ -18,6 +18,7 @@ import org.junit.Test
 import java.util.jar.JarFile
 import java.util.zip.ZipFile
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class NewMultiplatformIT : BaseGradleIT() {
@@ -574,6 +575,23 @@ class NewMultiplatformIT : BaseGradleIT() {
             assertSuccessful()
             assertTrue(output.contains("Dependent: Project print"), "No test output found")
             assertTrue(output.contains("Dependent: Published print"), "No test output found")
+        }
+    }
+
+    @Test
+    fun testNativeCompilerDownloading() {
+        // The plugin shouldn't download the K/N compiler if there is no corresponding targets in the project.
+        with(Project("new-mpp-lib-with-tests", gradleVersion)) {
+            build("tasks") {
+                assertSuccessful()
+                assertFalse(output.contains("Kotlin/Native distribution: "))
+            }
+        }
+        with(Project("new-mpp-native-libraries", gradleVersion)) {
+            build("tasks") {
+                assertSuccessful()
+                assertTrue(output.contains("Kotlin/Native distribution: "))
+            }
         }
     }
 }
