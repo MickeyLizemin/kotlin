@@ -10,7 +10,7 @@ import org.gradle.api.artifacts.repositories.ArtifactRepository
 import org.gradle.api.artifacts.repositories.IvyPatternRepositoryLayout
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
-import org.jetbrains.kotlin.compilerRunner.KonanCompilerRunner
+import org.jetbrains.kotlin.compilerRunner.*
 import org.jetbrains.kotlin.konan.KonanVersion
 import org.jetbrains.kotlin.konan.KonanVersionImpl
 import org.jetbrains.kotlin.konan.MetaVersion
@@ -21,8 +21,12 @@ import java.io.File
 class NativeCompilerDownloader(val project: Project) {
 
     internal companion object {
+        val DEFAULT_KONAN_VERSION = KonanVersionImpl(MetaVersion.RELEASE, 0, 9, 0)
         const val BASE_DOWNLOAD_URL = "https://download.jetbrains.com/kotlin/native/builds"
     }
+
+    private val compilerVersion: KonanVersion
+        get() = project.konanVersion
 
     private val logger: Logger
         get() = project.logger
@@ -88,7 +92,7 @@ class NativeCompilerDownloader(val project: Project) {
         val archive = configuration.files.single()
 
         logger.info("Use Kotlin/Native compiler archive: ${archive.absolutePath}")
-        logger.lifecycle("Unpacking Kotlin/Native compiler (version $versionString)...")
+        logger.lifecycle("Unpack Kotlin/Native compiler (version $versionString)...")
         project.copy {
             it.from(archiveFileTree(archive))
             it.into(DependencyDirectories.localKonanDir)
@@ -99,9 +103,6 @@ class NativeCompilerDownloader(val project: Project) {
 
     val compilerDirectory: File
         get() = DependencyDirectories.localKonanDir.resolve("kotlin-native-$simpleOsName-$compilerVersion")
-
-    // TODO: Support project property for Kotlin/Native compiler version
-    val compilerVersion: KonanVersion = KonanVersionImpl(MetaVersion.RELEASE, 0, 9, 0)
 
     fun downloadIfNeeded() {
         if (KonanCompilerRunner(project).classpath.isEmpty) {
